@@ -1,5 +1,6 @@
 import { useState } from "react";
 import Alert from "../components/Alert";
+import { useAuth } from "../context/AuthContext";
 
 function validateEmail(email) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -11,33 +12,68 @@ const initialForm = {
 };
 
 export default function Signup({ setPage }) {
-  const [form,  setForm]  = useState(initialForm);
+  const [form, setForm] = useState(initialForm);
   const [alert, setAlert] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const { login } = useAuth();
 
   function handleChange(e) {
     const { name, value, type, checked } = e.target;
     setForm({ ...form, [name]: type === "checkbox" ? checked : value });
   }
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault();
     if (form.fullName.trim().length < 3) {
-      setAlert({ msg: "Full name must be at least 3 characters.", type: "error" }); return;
+      setAlert({ msg: "Full name must be at least 3 characters.", type: "error" });
+      return;
     }
     if (!validateEmail(form.email)) {
-      setAlert({ msg: "Please enter a valid email address.", type: "error" }); return;
+      setAlert({ msg: "Please enter a valid email address.", type: "error" });
+      return;
     }
     if (form.password.length < 6) {
-      setAlert({ msg: "Password must be at least 6 characters.", type: "error" }); return;
+      setAlert({ msg: "Password must be at least 6 characters.", type: "error" });
+      return;
     }
     if (form.password !== form.confirmPassword) {
-      setAlert({ msg: "Passwords do not match.", type: "error" }); return;
+      setAlert({ msg: "Passwords do not match.", type: "error" });
+      return;
     }
     if (!form.terms) {
-      setAlert({ msg: "Please accept the Terms & Conditions.", type: "error" }); return;
+      setAlert({ msg: "Please accept the Terms & Conditions.", type: "error" });
+      return;
     }
-    setAlert({ msg: "Account created! Redirecting to login…", type: "success" });
-    setTimeout(() => setPage("login"), 2000);
+
+    setLoading(true);
+    setAlert(null);
+
+    try {
+      const res = await fetch("/api/auth/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          fullName: form.fullName,
+          email: form.email,
+          password: form.password,
+          phone: form.phone,
+          program: form.program,
+        }),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        setAlert({ msg: data.message || "Signup failed.", type: "error" });
+      } else {
+        login(data.user);
+        setAlert({ msg: data.message || "Account created successfully!", type: "success" });
+        setTimeout(() => setPage("profile"), 1200);
+      }
+    } catch (err) {
+      setAlert({ msg: "Network error. Please try again.", type: "error" });
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -119,7 +155,9 @@ export default function Signup({ setPage }) {
             </span>
           </div>
 
-          <button type="submit" className="btn-submit">Create Account</button>
+          <button type="submit" className="btn-submit" disabled={loading}>
+            {loading ? "Creating Account…" : "Create Account"}
+          </button>
 
           <p className="form-link">
             Already have an account?{" "}

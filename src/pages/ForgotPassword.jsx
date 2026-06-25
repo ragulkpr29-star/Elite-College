@@ -9,16 +9,38 @@ export default function ForgotPassword({ setPage }) {
   const [email, setEmail] = useState("");
   const [alert, setAlert] = useState(null);
   const [sent,  setSent]  = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault();
     if (!validateEmail(email)) {
       setAlert({ msg: "Please enter a valid email address.", type: "error" });
       return;
     }
-    setAlert({ msg: "Password reset link has been sent to your email!", type: "success" });
-    setSent(true);
-    setEmail("");
+
+    setLoading(true);
+    setAlert(null);
+
+    try {
+      const res = await fetch("/api/auth/forgot-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        setAlert({ msg: data.message || "Something went wrong.", type: "error" });
+      } else {
+        setAlert({ msg: data.message || "Password reset link has been sent!", type: "success" });
+        setSent(true);
+        setEmail("");
+      }
+    } catch (err) {
+      setAlert({ msg: "Network error. Please try again.", type: "error" });
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -46,7 +68,9 @@ export default function ForgotPassword({ setPage }) {
               />
             </div>
 
-            <button type="submit" className="btn-submit">Send Reset Link</button>
+            <button type="submit" className="btn-submit" disabled={loading}>
+              {loading ? "Sending…" : "Send Reset Link"}
+            </button>
 
             <p className="form-link">
               Remember your password?{" "}

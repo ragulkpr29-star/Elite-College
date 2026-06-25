@@ -10,19 +10,41 @@ function validateEmail(email) {
 export default function Contact() {
   const [form,  setForm]  = useState(initialForm);
   const [alert, setAlert] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   function handleChange(e) {
     setForm({ ...form, [e.target.name]: e.target.value });
   }
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault();
     if (!validateEmail(form.email)) {
       setAlert({ msg: "Please enter a valid email address.", type: "error" });
       return;
     }
-    setAlert({ msg: "Message sent! We'll get back to you soon.", type: "success" });
-    setForm(initialForm);
+
+    setLoading(true);
+    setAlert(null);
+
+    try {
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        setAlert({ msg: data.message || "Failed to send message.", type: "error" });
+      } else {
+        setAlert({ msg: data.message || "Message sent! We'll get back to you soon.", type: "success" });
+        setForm(initialForm);
+      }
+    } catch (err) {
+      setAlert({ msg: "Network error. Please try again.", type: "error" });
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -96,7 +118,9 @@ export default function Contact() {
                   onChange={handleChange}
                 />
               </div>
-              <button type="submit" className="btn-submit">Send Message</button>
+              <button type="submit" className="btn-submit" disabled={loading}>
+                {loading ? "Sending…" : "Send Message"}
+              </button>
             </form>
           </div>
 

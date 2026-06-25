@@ -336,6 +336,17 @@ tr:hover td { background: var(--light); }
 .form-link { text-align: center; margin-top: 24px; font-size: 15px; color: var(--text-light); }
 .form-link a { color: var(--primary); font-weight: 600; text-decoration: none; margin-left: 6px; }
 
+.profile-page { padding: 80px 20px 100px; background: var(--light); min-height: calc(100vh - 180px); }
+.profile-page-card { max-width: 900px; margin: 0 auto; padding: 48px; }
+.profile-hero { display: flex; align-items: center; gap: 28px; margin-bottom: 36px; }
+.profile-avatar-large { width: 96px; height: 96px; border-radius: 50%; background: var(--accent); color: var(--primary-dark); display: grid; place-items: center; font-size: 36px; font-weight: 800; }
+.profile-role { margin-top: 8px; color: var(--accent); font-weight: 700; }
+.profile-email { margin-top: 8px; color: var(--text-light); }
+.profile-details-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+.profile-detail-card { background: #fff; border-radius: var(--radius-xl); padding: 24px; border: 1px solid var(--border); }
+.profile-detail-card span { display: block; color: var(--text-light); margin-bottom: 10px; font-size: 13px; text-transform: uppercase; letter-spacing: 0.08em; }
+.profile-detail-card strong { color: var(--primary); font-size: 16px; }
+
 .cta-band { background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%); color: #fff; text-align: center; padding: 100px 8%; position: relative; }
 .cta-band h2 { color: #fff; font-size: clamp(26px, 4vw, 40px); margin-bottom: 16px; font-weight: 700; }
 .cta-band p  { font-size: 18px; opacity: 0.9; margin-bottom: 32px; max-width: 600px; margin-inline: auto; line-height: 1.6; }

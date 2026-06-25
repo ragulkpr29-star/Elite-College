@@ -1,5 +1,6 @@
 import { useState } from "react";
 import Alert from "../components/Alert";
+import { useAuth } from "../context/AuthContext";
 
 function validateEmail(email) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -8,15 +9,17 @@ function validateEmail(email) {
 const initialForm = { email: "", password: "", remember: false };
 
 export default function Login({ setPage }) {
-  const [form,  setForm]  = useState(initialForm);
+  const [form, setForm] = useState(initialForm);
   const [alert, setAlert] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const { login } = useAuth();
 
   function handleChange(e) {
     const { name, value, type, checked } = e.target;
     setForm({ ...form, [name]: type === "checkbox" ? checked : value });
   }
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault();
     if (!validateEmail(form.email)) {
       setAlert({ msg: "Please enter a valid email address.", type: "error" });
@@ -26,8 +29,30 @@ export default function Login({ setPage }) {
       setAlert({ msg: "Password must be at least 6 characters.", type: "error" });
       return;
     }
-    setAlert({ msg: "Login successful! Redirecting…", type: "success" });
-    setTimeout(() => setPage("home"), 2000);
+
+    setLoading(true);
+    setAlert(null);
+
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: form.email, password: form.password }),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        setAlert({ msg: data.message || "Login failed.", type: "error" });
+      } else {
+        login(data.user);
+        setAlert({ msg: data.message || "Login successful! Redirecting…", type: "success" });
+        setTimeout(() => setPage("home"), 1200);
+      }
+    } catch (err) {
+      setAlert({ msg: "Network error. Please try again.", type: "error" });
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -82,7 +107,9 @@ export default function Login({ setPage }) {
             </a>
           </div>
 
-          <button type="submit" className="btn-submit">Login</button>
+          <button type="submit" className="btn-submit" disabled={loading}>
+            {loading ? "Logging in…" : "Login"}
+          </button>
 
           <p className="form-link">
             Don't have an account?{" "}
